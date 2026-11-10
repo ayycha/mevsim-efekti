@@ -1,7 +1,7 @@
 {
   "name": "mevsim-efekti",
   "productName": "MevsimEfekti",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Masaüstüne kar ve sonbahar yaprakları yağdıran ücretsiz uygulama",
   "main": "main.js",
   "author": "ayycha",

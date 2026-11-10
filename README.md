@@ -6,7 +6,7 @@ Windows, macOS ve Linux için.
 - ❄️ Kar yağar, yerde ve açık pencerelerin üst kenarında **birikir** (belli bir seviyeden fazla yükselmez).
 - ⚪ Birikmiş karın üstünde fareyi **yavaş** gezdirirseniz **kartopu** yuvarlanır ve büyür.
 - 💨 Fareyi **hızlı** geçirirseniz kar uçar, kartopunu fırlatabilirsiniz.
-- 🪟 Bir klasörü / pencereyi sürüklerseniz üstündeki kar **savrulur**.
+- 🪟 *(Gelişmiş, Windows, kaynak koddan çalıştırınca)* Açık pencerelerin kenarında birikme; pencere sürüklenince kar savrulur.
 - 🍂 Sonbahar modunda renkli yapraklar yağar ve yerde birikir.
 - 🖱️ Tıklamaları engellemez, normal çalışmaya devam edebilirsiniz.
 - ⚙️ Yoğunluk, yağış hızı ve saydamlık ayarlanabilir. İsterseniz bilgisayar açılınca kendiliğinden başlar.
@@ -37,6 +37,17 @@ Açılan sayfada aşağı inip **Assets** bölümünden sisteminize uygun dosyay
 2. **"Windows bilgisayarınızı korudu"** uyarısı çıkarsa **Ek bilgi → Yine de çalıştır** deyin. (Uygulama imzasız olduğu için çıkar, zararlı değildir.)
 3. Ekrana kar yağmaya başlar. Sağ alttaki simge (gizli simgeler `^` okunun içinde olabilir) menüyü açar.
 
+#### 🛡️ İndirirken "virüs / zararlı olabilir" uyarısı çıkarsa
+
+Bu uygulama **açık kaynaklıdır**, kodun tamamı bu sayfada herkesin okuyabileceği şekilde durur. Uyarı, uygulamanın henüz dijital olarak **imzalanmamış** ve yeni olmasından kaynaklanır. Yine de indirmek isterseniz:
+
+- **Chrome:** İndirilenler listesinde dosyanın yanındaki **⋮** → **Sakla (Keep)** deyin.
+- **Edge:** İndirilenler penceresinde dosyanın yanındaki **⋯** → **Sakla (Keep)** → **Yine de sakla** deyin.
+- **Windows Defender / SmartScreen:** **Ek bilgi → Yine de çalıştır** deyin.
+- Güvenlik programınız dosyayı silerse, dosyayı **izin verilenler / dışlamalar** listesine ekleyin.
+
+Dosyanın güvenliğinden emin olmak için [virustotal.com](https://www.virustotal.com) adresine yükleyip birçok antivirüs motoruyla taratabilirsiniz.
+
 ### macOS
 1. `.dmg` dosyasını açın, uygulamayı **Applications (Uygulamalar)** klasörüne sürükleyin.
 2. İlk açılışta uyarı çıkarsa uygulamaya **sağ tık → Aç** deyin.
@@ -57,7 +68,7 @@ Simgeye (Windows'ta sağ alt, Mac'te sağ üst) tıklayın:
 - **Yoğunluk, Yağış hızı, Saydamlık**: istediğiniz gibi ayarlayın
 - **Yerde birikme**: kapatırsanız kar/yaprak birikmez
 - **Fareyle etkileşim**: kartopu yuvarlama ve kar uçurmayı açıp kapatır
-- **Pencerelerin kenarında biriksin** (Windows): açık pencerelerin üstünde birikmeyi açıp kapatır
+- **Pencerelerin kenarında biriksin** (gelişmiş sürüm): açık pencerelerin üstünde birikmeyi açıp kapatır
 - **Duraklat**: efekti geçici olarak gizler
 - **Bilgisayar açılınca başlat**: açılışta otomatik çalışır
 - **Çıkış**: uygulamayı kapatır
@@ -82,6 +93,8 @@ Simgeye (Windows'ta sağ alt, Mac'te sağ üst) tıklayın:
 npm install
 npm start
 ```
+
+Pencere algılama özelliği, antivirüs uyarısı riskine karşı kurulum paketinden çıkarılmıştır. Kaynak koddan `npm start` ile çalıştırınca açıktır. Kurulum paketine eklemek için `package.json` içindeki `files` listesine `"window-tracker.js"` yazın.
 
 Ayarlar `renderer.js` dosyasının en üstündeki **AYARLAR** bölümündedir (kar yığını yüksekliği, kartopu boyutu, fare hassasiyeti, parçacık sayıları, yaprak renkleri).
 
