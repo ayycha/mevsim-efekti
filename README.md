@@ -37,25 +37,6 @@ Eski sürümler ve sürüm notları için: [Tüm sürümler](https://github.com/
 2. **"Windows bilgisayarınızı korudu"** uyarısı çıkarsa **Ek bilgi → Yine de çalıştır** deyin. (Uygulama imzasız olduğu için çıkar, zararlı değildir.)
 3. Ekrana kar yağmaya başlar. Sağ alttaki simge (gizli simgeler `^` okunun içinde olabilir) menüyü açar.
 
-#### 🛡️ İndirirken "virüs / zararlı olabilir" uyarısı çıkarsa
-
-Bu uygulama **açık kaynaklıdır**, kodun tamamı bu sayfada herkesin okuyabileceği şekilde durur. Uyarı, uygulamanın henüz dijital olarak **imzalanmamış** ve yeni olmasından kaynaklanır. Yine de indirmek isterseniz:
-
-- **Chrome:** İndirilenler listesinde dosyanın yanındaki **⋮** → **Sakla (Keep)** deyin.
-- **Edge:** İndirilenler penceresinde dosyanın yanındaki **⋯** → **Sakla (Keep)** → **Yine de sakla** deyin.
-- **Windows Defender / SmartScreen:** **Ek bilgi → Yine de çalıştır** deyin.
-- Güvenlik programınız dosyayı silerse, dosyayı **izin verilenler / dışlamalar** listesine ekleyin.
-
-Dosyanın güvenliğinden emin olmak için [virustotal.com](https://www.virustotal.com) adresine yükleyip birçok antivirüs motoruyla taratabilirsiniz.
-
-#### 🛡️ "Akıllı Uygulama Denetimi güvenli olmayabilecek bir uygulamayı engelledi" diyorsa
-
-Bu bir virüs uyarısı **değildir**. Windows 11'in, **imzasız** uygulamaları hiç çalıştırmayan "Akıllı Uygulama Denetimi" özelliğidir ve "Yine de çalıştır" seçeneği sunmaz. Uygulama henüz dijital olarak imzalanmadığı için çıkar. Kurmak için:
-
-1. Başlat menüsüne **Windows Güvenliği** yazıp açın → **Uygulama ve tarayıcı denetimi** → **Akıllı Uygulama Denetimi ayarları** → **Kapalı** seçin.
-2. Kurulum dosyasını çalıştırın.
-3. İsterseniz aynı yerden tekrar **Açık** yapabilirsiniz. (Güncel Windows 11 sürümlerinde mümkündür, eski sürümlerde kapatma kalıcı olabilir.)
-
 ### macOS
 1. `.dmg` dosyasını açın, uygulamayı **Applications (Uygulamalar)** klasörüne sürükleyin.
 2. İlk açılışta uyarı çıkarsa uygulamaya **sağ tık → Aç** deyin.
