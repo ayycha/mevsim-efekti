@@ -15,18 +15,18 @@ Windows, macOS ve Linux için.
 
 ## 📥 İndirme
 
-### 👉 [**İNDİRMEK İÇİN TIKLAYIN**](https://github.com/ayycha/mevsim-efekti/releases/latest)
+Sisteminize uygun düğmeye tıklayın, dosya doğrudan iner:
 
-Açılan sayfada aşağı inip **Assets** bölümünden sisteminize uygun dosyayı indirin:
-
-| Sisteminiz | İndirilecek dosya |
+| Sisteminiz | İndir |
 | --- | --- |
-| 🪟 Windows 10 / 11 | `MevsimEfekti-Setup-....exe` |
-| 🍎 Mac (M1, M2, M3... işlemci) | `MevsimEfekti-...-mac-arm64.dmg` |
-| 🍎 Mac (Intel işlemci) | `MevsimEfekti-...-mac-x64.dmg` |
-| 🐧 Linux | `MevsimEfekti-...-linux.AppImage` |
+| 🪟 **Windows 10 / 11** | 👉 [**MevsimEfekti-Setup.exe**](https://github.com/ayycha/mevsim-efekti/releases/latest/download/MevsimEfekti-Setup.exe) |
+| 🍎 **Mac** (M1, M2, M3... işlemci) | 👉 [**MevsimEfekti-mac-arm64.dmg**](https://github.com/ayycha/mevsim-efekti/releases/latest/download/MevsimEfekti-mac-arm64.dmg) |
+| 🍎 **Mac** (Intel işlemci) | 👉 [**MevsimEfekti-mac-x64.dmg**](https://github.com/ayycha/mevsim-efekti/releases/latest/download/MevsimEfekti-mac-x64.dmg) |
+| 🐧 **Linux** | 👉 [**MevsimEfekti-linux.AppImage**](https://github.com/ayycha/mevsim-efekti/releases/latest/download/MevsimEfekti-linux.AppImage) |
 
 > Hangi Mac'e sahip olduğunuzu bilmiyorsanız: Apple menüsü → **Bu Mac Hakkında**. "Çip: Apple M..." yazıyorsa arm64, "İşlemci: Intel" yazıyorsa x64 dosyasını indirin.
+
+Eski sürümler ve sürüm notları için: [Tüm sürümler](https://github.com/ayycha/mevsim-efekti/releases)
 
 ---
 
@@ -47,6 +47,14 @@ Bu uygulama **açık kaynaklıdır**, kodun tamamı bu sayfada herkesin okuyabil
 - Güvenlik programınız dosyayı silerse, dosyayı **izin verilenler / dışlamalar** listesine ekleyin.
 
 Dosyanın güvenliğinden emin olmak için [virustotal.com](https://www.virustotal.com) adresine yükleyip birçok antivirüs motoruyla taratabilirsiniz.
+
+#### 🛡️ "Akıllı Uygulama Denetimi güvenli olmayabilecek bir uygulamayı engelledi" diyorsa
+
+Bu bir virüs uyarısı **değildir**. Windows 11'in, **imzasız** uygulamaları hiç çalıştırmayan "Akıllı Uygulama Denetimi" özelliğidir ve "Yine de çalıştır" seçeneği sunmaz. Uygulama henüz dijital olarak imzalanmadığı için çıkar. Kurmak için:
+
+1. Başlat menüsüne **Windows Güvenliği** yazıp açın → **Uygulama ve tarayıcı denetimi** → **Akıllı Uygulama Denetimi ayarları** → **Kapalı** seçin.
+2. Kurulum dosyasını çalıştırın.
+3. İsterseniz aynı yerden tekrar **Açık** yapabilirsiniz. (Güncel Windows 11 sürümlerinde mümkündür, eski sürümlerde kapatma kalıcı olabilir.)
 
 ### macOS
 1. `.dmg` dosyasını açın, uygulamayı **Applications (Uygulamalar)** klasörüne sürükleyin.
