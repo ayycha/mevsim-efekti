@@ -1,96 +1,80 @@
-// Windows: açık pencerelerin konumlarını izleyen yardımcı (PowerShell ile).
-// NOT: Bu dosya bilerek kurulum paketine KONMUYOR (package.json -> "files" listesinde yok),
-// çünkü antivirüsler arka planda PowerShell çalıştıran imzasız uygulamalara şüpheyle bakabiliyor.
-// Etkinleştirmek için package.json -> build -> files listesine "window-tracker.js" ekleyin.
-const readline = require('readline');
-const { spawn } = require('child_process');
+// Windows: açık pencerelerin konumlarını doğrudan Windows API'sinden okur (koffi ile).
+// PowerShell ya da ek bir program ÇALIŞTIRMAZ; antivirüs uyarısı çıkarmaması için böyle yapıldı.
+// Bir sorun olursa uygulama çökmez, sadece pencere özellikleri kapanır ve nedeni log.txt'ye yazılır.
 
-function buildPsScript(pid) {
-  return `
-$ErrorActionPreference = 'Stop'
-Add-Type -TypeDefinition @'
-using System;
-using System.Text;
-using System.Runtime.InteropServices;
+const BLOCKED_CLASSES = new Set(['Progman', 'WorkerW', 'Shell_TrayWnd', 'Shell_SecondaryTrayWnd']);
 
-public static class WinList
-{
-    delegate bool EnumProc(IntPtr h, IntPtr l);
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct RECT { public int L, T, R, B; }
-
-    [DllImport("user32.dll")] static extern bool EnumWindows(EnumProc cb, IntPtr l);
-    [DllImport("user32.dll")] static extern bool IsWindowVisible(IntPtr h);
-    [DllImport("user32.dll")] static extern bool IsIconic(IntPtr h);
-    [DllImport("user32.dll")] static extern int GetWindowTextLength(IntPtr h);
-    [DllImport("user32.dll")] static extern int GetWindowLong(IntPtr h, int i);
-    [DllImport("user32.dll")] static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
-    [DllImport("user32.dll", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr h, StringBuilder sb, int n);
-    [DllImport("user32.dll")] static extern bool SetProcessDPIAware();
-    [DllImport("user32.dll")] static extern bool SetProcessDpiAwarenessContext(IntPtr ctx);
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int DwmGetRect(IntPtr h, int attr, out RECT r, int size);
-    [DllImport("dwmapi.dll", EntryPoint = "DwmGetWindowAttribute")] static extern int DwmGetInt(IntPtr h, int attr, out int v, int size);
-
-    public static void SetDpi()
-    {
-        try { SetProcessDpiAwarenessContext(new IntPtr(-4)); }
-        catch (Exception) { try { SetProcessDPIAware(); } catch (Exception) { } }
-    }
-
-    public static string Snapshot(uint ownPid)
-    {
-        StringBuilder sb = new StringBuilder("[");
-        bool first = true;
-        EnumWindows(delegate (IntPtr h, IntPtr l)
-        {
-            if (!IsWindowVisible(h) || IsIconic(h)) return true;
-            uint pid;
-            GetWindowThreadProcessId(h, out pid);
-            if (pid == ownPid) return true;
-            int cloaked;
-            if (DwmGetInt(h, 14, out cloaked, 4) == 0 && cloaked != 0) return true;
-            if ((GetWindowLong(h, -20) & 0x80) != 0) return true;
-            if (GetWindowTextLength(h) == 0) return true;
-            StringBuilder cn = new StringBuilder(80);
-            GetClassName(h, cn, 80);
-            string c = cn.ToString();
-            if (c == "Progman" || c == "WorkerW" || c == "Shell_TrayWnd" || c == "Shell_SecondaryTrayWnd") return true;
-            RECT r;
-            if (DwmGetRect(h, 9, out r, 16) != 0) return true;
-            int w = r.R - r.L;
-            int ht = r.B - r.T;
-            if (w < 100 || ht < 40) return true;
-            if (!first) sb.Append(',');
-            first = false;
-            sb.Append('[').Append(h.ToInt64()).Append(',').Append(r.L).Append(',').Append(r.T).Append(',').Append(w).Append(',').Append(ht).Append(']');
-            return true;
-        }, IntPtr.Zero);
-        sb.Append(']');
-        return sb.ToString();
-    }
-}
-'@
-[WinList]::SetDpi()
-$ownPid = ${pid}
-$n = 0
-while ($true) {
-  [Console]::Out.WriteLine([WinList]::Snapshot([uint32]$ownPid))
-  [Console]::Out.Flush()
-  Start-Sleep -Milliseconds 60
-  $n++
-  if ($n % 25 -eq 0) {
-    if (-not (Get-Process -Id $ownPid -ErrorAction SilentlyContinue)) { break }
-  }
-}
-`;
-}
-
-function create({ screen, isEnabled, onRects }) {
-  let helper = null;
-  let restarts = 0;
-  let lastLine = '';
+function create({ screen, isEnabled, onRects, log }) {
+  const say = (m) => { try { if (log) log(m); } catch (e) { /* yoksay */ } };
+  let api = null;
+  let timer = null;
+  let lastJson = '';
+  let fails = 0;
+  let broken = false;
   let quitting = false;
+  let firstScanLogged = false;
+
+  // "__stdcall" yazımı kabul edilmezse onsuz dener (64 bit Windows'ta ikisi aynıdır)
+  function decl(lib, ret, name, args) {
+    try { return lib.func(ret + ' __stdcall ' + name + '(' + args + ')'); }
+    catch (e) { return lib.func(ret + ' ' + name + '(' + args + ')'); }
+  }
+  function declProto(koffi, ret, name, args) {
+    try { return koffi.proto(ret + ' __stdcall ' + name + '(' + args + ')'); }
+    catch (e) { return koffi.proto(ret + ' ' + name + '(' + args + ')'); }
+  }
+
+  function load() {
+    if (api) return api;
+    const koffi = require('koffi');
+    const user32 = koffi.load('user32.dll');
+    const dwm = koffi.load('dwmapi.dll');
+    declProto(koffi, 'int', 'MevsimEnumProc', 'intptr_t hwnd, intptr_t lparam');
+    api = {
+      EnumWindows: decl(user32, 'int', 'EnumWindows', 'MevsimEnumProc *cb, intptr_t lparam'),
+      IsWindowVisible: decl(user32, 'int', 'IsWindowVisible', 'intptr_t hwnd'),
+      IsIconic: decl(user32, 'int', 'IsIconic', 'intptr_t hwnd'),
+      GetWindowTextLengthW: decl(user32, 'int', 'GetWindowTextLengthW', 'intptr_t hwnd'),
+      GetWindowLongW: decl(user32, 'int', 'GetWindowLongW', 'intptr_t hwnd, int index'),
+      GetWindowThreadProcessId: decl(user32, 'uint32_t', 'GetWindowThreadProcessId', 'intptr_t hwnd, void *pid'),
+      GetClassNameW: decl(user32, 'int', 'GetClassNameW', 'intptr_t hwnd, void *buf, int max'),
+      DwmGetWindowAttribute: decl(dwm, 'int32_t', 'DwmGetWindowAttribute', 'intptr_t hwnd, uint32_t attr, void *out, uint32_t size'),
+    };
+    return api;
+  }
+
+  // Görünen pencerelerin listesi, üstteki pencere önce: [[id, x, y, w, h], ...] (fiziksel piksel)
+  function snapshot() {
+    const a = load();
+    const out = [];
+    const ownPid = process.pid;
+    const pidBuf = Buffer.alloc(4);
+    const rectBuf = Buffer.alloc(16);
+    const intBuf = Buffer.alloc(4);
+    const clsBuf = Buffer.alloc(160);
+
+    a.EnumWindows((hwnd) => {
+      try {
+        const h = Number(hwnd);
+        if (!a.IsWindowVisible(h) || a.IsIconic(h)) return 1;
+        a.GetWindowThreadProcessId(h, pidBuf);
+        if (pidBuf.readUInt32LE(0) === ownPid) return 1;               // kendi efekt pencerelerimiz
+        if (a.DwmGetWindowAttribute(h, 14, intBuf, 4) === 0 && intBuf.readInt32LE(0) !== 0) return 1;   // gizlenmiş (cloaked)
+        if ((a.GetWindowLongW(h, -20) & 0x80) !== 0) return 1;         // araç penceresi
+        if (a.GetWindowTextLengthW(h) === 0) return 1;                 // başlıksız
+        const n = a.GetClassNameW(h, clsBuf, 80);
+        const cn = clsBuf.toString('utf16le', 0, Math.max(0, n) * 2);
+        if (BLOCKED_CLASSES.has(cn)) return 1;                         // masaüstü, görev çubuğu
+        if (a.DwmGetWindowAttribute(h, 9, rectBuf, 16) !== 0) return 1;   // gölgesiz gerçek çerçeve
+        const l = rectBuf.readInt32LE(0), t = rectBuf.readInt32LE(4);
+        const w = rectBuf.readInt32LE(8) - l, ht = rectBuf.readInt32LE(12) - t;
+        if (w < 100 || ht < 40) return 1;
+        out.push([h, l, t, w, ht]);
+      } catch (e) { /* bu pencereyi atla */ }
+      return 1;
+    }, 0);
+    return out;
+  }
 
   function toDip(r) {
     const [id, x, y, w, h] = r;
@@ -104,51 +88,45 @@ function create({ screen, isEnabled, onRects }) {
     return [id, Math.round(d.x), Math.round(d.y), Math.round(d.width), Math.round(d.height)];
   }
 
-  function onLine(line) {
-    line = line.trim();
-    if (!line || line === lastLine) return;
-    lastLine = line;
-    let arr;
-    try { arr = JSON.parse(line); } catch (e) { return; }
-    if (!Array.isArray(arr)) return;
-    onRects(arr.filter((r) => Array.isArray(r) && r.length === 5).map(toDip));
+  function tick() {
+    if (quitting || !isEnabled()) return;
+    try {
+      const raw = snapshot();
+      fails = 0;
+      if (!firstScanLogged) { firstScanLogged = true; say('ilk tarama: ' + raw.length + ' pencere bulundu'); }
+      const json = JSON.stringify(raw);
+      if (json === lastJson) return;
+      lastJson = json;
+      onRects(raw.map(toDip));
+    } catch (e) {
+      fails++;
+      say('pencere izleme hatası: ' + ((e && e.stack) || e));
+      if (fails >= 5) { say('pencere izleme durduruldu (üst üste 5 hata)'); broken = true; stop(); }
+    }
   }
 
   function start() {
-    if (process.platform !== 'win32' || helper || quitting || !isEnabled()) return;
-    const encoded = Buffer.from(buildPsScript(process.pid), 'utf16le').toString('base64');
-    let proc;
-    try {
-      proc = spawn(
-        'powershell.exe',
-        ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', encoded],
-        { windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] }
-      );
-    } catch (e) { return; }
-    helper = proc;
-    readline.createInterface({ input: proc.stdout }).on('line', onLine);
-    proc.on('error', () => { if (helper === proc) helper = null; });
-    proc.on('exit', () => {
-      if (helper === proc) helper = null;
-      if (!quitting && isEnabled() && restarts < 3) {
-        restarts++;
-        setTimeout(start, 3000);
-      }
-    });
+    if (process.platform !== 'win32' || timer || quitting || broken || !isEnabled()) return;
+    try { load(); } catch (e) {
+      say('pencere izleme başlatılamadı (koffi yüklenemedi): ' + ((e && e.stack) || e));
+      broken = true;
+      return;
+    }
+    say('pencere izleme başladı');
+    timer = setInterval(tick, 60);
+    tick();
   }
 
   function stop() {
-    const p = helper;
-    helper = null;
-    if (p) { try { p.kill(); } catch (e) {} }
-    lastLine = '';
+    if (timer) { clearInterval(timer); timer = null; }
+    lastJson = '';
     onRects([]);
   }
 
   return {
     start,
     stop,
-    resetRestarts() { restarts = 0; },
+    resetRestarts() { fails = 0; broken = false; },
     quit() { quitting = true; stop(); },
   };
 }

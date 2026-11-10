@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, screen, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, screen, nativeImage, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -29,6 +29,15 @@ function loadSettings() {
 }
 function saveSettings() {
   try { fs.writeFileSync(settingsFile(), JSON.stringify(settings)); } catch (e) {}
+}
+
+// Sorun olursa nedenini yazan küçük kayıt dosyası
+const logFile = () => path.join(app.getPath('userData'), 'log.txt');
+function log(msg) {
+  try { fs.appendFileSync(logFile(), new Date().toISOString() + ' ' + msg + '\n'); } catch (e) {}
+}
+function trimLog() {
+  try { if (fs.statSync(logFile()).size > 200000) fs.unlinkSync(logFile()); } catch (e) {}
 }
 
 /* ---------------- Pencereler (her ekrana bir tane) ---------------- */
@@ -119,9 +128,9 @@ function startCursorTimer() {
   }, 16);
 }
 
-/* ---------------- Açık pencereleri izleme (isteğe bağlı, sadece Windows) ----------------
-   window-tracker.js dosyası kurulum paketinde yoksa bu özellik kapalı kalır,
-   uygulama sadece ekranın altına biriktirir. */
+/* ---------------- Açık pencereleri izleme (sadece Windows) ----------------
+   Windows API'sinden doğrudan okur (window-tracker.js). Çalışmazsa uygulama
+   sadece ekranın altına biriktirir ve nedeni log.txt'ye yazar. */
 let winRects = []; // DIP, ekran koordinatı: [id, x, y, w, h] (üstteki pencere önce)
 let tracker = null;
 try {
@@ -129,8 +138,9 @@ try {
     screen,
     isEnabled: () => settings.windowAware && !settings.paused,
     onRects: (rects) => { winRects = rects; broadcastWindows(); },
+    log,
   });
-} catch (e) { tracker = null; }
+} catch (e) { tracker = null; log('window-tracker yüklenemedi: ' + e); }
 
 function sendWindows(entry) {
   const { win, bounds: b } = entry;
@@ -222,6 +232,10 @@ function buildMenu() {
         if (settings.paused) stopWindowTracker(); else { if (tracker) tracker.resetRestarts(); startWindowTracker(); }
       },
     },
+    ...(tracker ? [{
+      label: 'Kayıt dosyasını göster (sorun olursa)',
+      click: () => shell.showItemInFolder(logFile()),
+    }] : []),
     {
       label: 'Bilgisayar açılınca başlat',
       type: 'checkbox',
@@ -257,6 +271,8 @@ if (!app.requestSingleInstanceLock()) {
   app.quit();
 } else {
   app.whenReady().then(() => {
+    trimLog();
+    log('uygulama başladı, sürüm ' + app.getVersion());
     loadSettings();
     createWindows();
     createTray();

@@ -1,7 +1,7 @@
 {
   "name": "mevsim-efekti",
   "productName": "MevsimEfekti",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Masaüstüne kar ve sonbahar yaprakları yağdıran ücretsiz uygulama",
   "main": "main.js",
   "author": "ayycha",
@@ -23,8 +23,10 @@
       "preload.js",
       "index.html",
       "renderer.js",
+      "window-tracker.js",
       "tray.png",
-      "build/icon.png"
+      "build/icon.png",
+      "!**/node_modules/koffi/build/koffi/{darwin,linux,musl,freebsd,openbsd}_*/**"
     ],
     "directories": {
       "buildResources": "build"
@@ -34,12 +36,27 @@
       "releaseType": "release"
     },
     "mac": {
-      "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "category": "public.app-category.entertainment",
       "artifactName": "${productName}-${version}-mac-${arch}.${ext}"
     },
     "win": {
-      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "artifactName": "${productName}-Setup-${version}.${ext}"
     },
     "nsis": {
@@ -47,9 +64,19 @@
       "perMachine": false
     },
     "linux": {
-      "target": [{ "target": "AppImage", "arch": ["x64"] }],
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
       "category": "Utility",
       "artifactName": "${productName}-${version}-linux.${ext}"
     }
+  },
+  "dependencies": {
+    "koffi": "^2.9.0"
   }
 }

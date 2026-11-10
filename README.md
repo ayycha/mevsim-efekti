@@ -6,7 +6,7 @@ Windows, macOS ve Linux için.
 - ❄️ Kar yağar, yerde ve açık pencerelerin üst kenarında **birikir** (belli bir seviyeden fazla yükselmez).
 - ⚪ Birikmiş karın üstünde fareyi **yavaş** gezdirirseniz **kartopu** yuvarlanır ve büyür.
 - 💨 Fareyi **hızlı** geçirirseniz kar uçar, kartopunu fırlatabilirsiniz.
-- 🪟 *(Gelişmiş, Windows, kaynak koddan çalıştırınca)* Açık pencerelerin kenarında birikme; pencere sürüklenince kar savrulur.
+- 🪟 *(Windows)* Açık pencerelerin üst kenarında da kar birikir; bir pencereyi sürüklerseniz üstündeki kar **savrulur**.
 - 🍂 Sonbahar modunda renkli yapraklar yağar ve yerde birikir.
 - 🖱️ Tıklamaları engellemez, normal çalışmaya devam edebilirsiniz.
 - ⚙️ Yoğunluk, yağış hızı ve saydamlık ayarlanabilir. İsterseniz bilgisayar açılınca kendiliğinden başlar.
@@ -68,7 +68,7 @@ Simgeye (Windows'ta sağ alt, Mac'te sağ üst) tıklayın:
 - **Yoğunluk, Yağış hızı, Saydamlık**: istediğiniz gibi ayarlayın
 - **Yerde birikme**: kapatırsanız kar/yaprak birikmez
 - **Fareyle etkileşim**: kartopu yuvarlama ve kar uçurmayı açıp kapatır
-- **Pencerelerin kenarında biriksin** (gelişmiş sürüm): açık pencerelerin üstünde birikmeyi açıp kapatır
+- **Pencerelerin kenarında biriksin** (Windows): açık pencerelerin üstünde birikmeyi açıp kapatır
 - **Duraklat**: efekti geçici olarak gizler
 - **Bilgisayar açılınca başlat**: açılışta otomatik çalışır
 - **Çıkış**: uygulamayı kapatır
@@ -93,8 +93,6 @@ Simgeye (Windows'ta sağ alt, Mac'te sağ üst) tıklayın:
 npm install
 npm start
 ```
-
-Pencere algılama özelliği, antivirüs uyarısı riskine karşı kurulum paketinden çıkarılmıştır. Kaynak koddan `npm start` ile çalıştırınca açıktır. Kurulum paketine eklemek için `package.json` içindeki `files` listesine `"window-tracker.js"` yazın.
 
 Ayarlar `renderer.js` dosyasının en üstündeki **AYARLAR** bölümündedir (kar yığını yüksekliği, kartopu boyutu, fare hassasiyeti, parçacık sayıları, yaprak renkleri).
 
